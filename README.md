@@ -51,6 +51,8 @@ Without an API key, the server will return demo data.
    - Click "Save Changes"
 5. **Deploy!**
 
+> Note: On Render's free tier, services go idle after ~15 minutes of inactivity and may require a manual "Deploy" to wake or to pick up the latest commit. Unlike Vercel, pushes do not auto-deploy by default.
+
 Your server will be available at `https://weather-mcp.onrender.com/mcp`
 
 ## 🎯 Poke Integration
@@ -58,7 +60,12 @@ Your server will be available at `https://weather-mcp.onrender.com/mcp`
 1. Go to [poke.com/settings/connections](https://poke.com/settings/connections)
 2. Add the MCP URL: `https://weather-mcp.onrender.com/mcp`
 3. Give it a name like "Weather"
-4. Test with: "Tell the subagent to use the Weather integration's get_current_weather tool"
+4. Try: "Can you use the Weather MCP to get current weather for San Francisco?"
+
+## References
+
+- Based on the Interaction MCP server template: [MCP Server Template](https://github.com/InteractionCo/mcp-server-template/tree/main)
+- Discovered via Interaction’s HackMIT challenge: [Interaction HackMIT Challenge](https://interaction.co/HackMIT)
 
 ## 🔧 Available Tools
 
