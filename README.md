@@ -35,22 +35,21 @@ Without an API key, the server will return demo data.
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
 
 **Steps:**
-1. **Fork this repository** (if you haven't already)
+1. **Click the "Deploy to Render" button above** or go to [render.com](https://render.com)
 2. **Connect your GitHub account to Render** (if you haven't already)
-3. **Click the "Deploy to Render" button above** or go to [render.com](https://render.com)
-4. **Create a new Web Service:**
-   - Connect your forked repository
+3. **Create a new Web Service:**
+   - Connect this repository
    - **Name**: `weather-mcp`
    - **Environment**: `Python 3`
    - **Plan**: `Free`
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `python src/server.py`
-5. **Set environment variable (optional):**
+4. **Set environment variable (optional):**
    - Go to your Render service dashboard
    - Click on "Environment" tab
    - Add environment variable: `WEATHER_API_KEY` = `your_openweathermap_api_key` (optional - works without it using demo data)
    - Click "Save Changes"
-6. **Deploy!**
+5. **Deploy!**
 
 Your server will be available at `https://weather-mcp.onrender.com/mcp`
 
