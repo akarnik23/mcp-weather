@@ -206,53 +206,7 @@ def get_current_weather(location: str, units: str = "metric") -> str:
     Returns:
         JSON string with current weather data
     """
-    try:
-        if WEATHER_API_KEY == "demo":
-            # Return demo data
-            demo_data = {
-                "location": location,
-                "temperature": 22,
-                "feels_like": 21,
-                "conditions": "Partly Cloudy",
-                "humidity": 65,
-                "pressure": 1013,
-                "wind_speed": 12,
-                "wind_direction": "NW",
-                "units": units,
-                "note": "This is demo data. Set WEATHER_API_KEY environment variable for real data."
-            }
-            return json.dumps(demo_data, indent=2)
-        
-        # Use real OpenWeatherMap API
-        params = {
-            "q": location,
-            "appid": WEATHER_API_KEY,
-            "units": units
-        }
-        
-        response = httpx.get(f"{WEATHER_API_BASE}/weather", params=params, timeout=10.0)
-        response.raise_for_status()
-        data = response.json()
-        
-        weather_data = {
-            "location": f"{data['name']}, {data['sys']['country']}",
-            "temperature": data['main']['temp'],
-            "feels_like": data['main']['feels_like'],
-            "conditions": data['weather'][0]['description'],
-            "humidity": data['main']['humidity'],
-            "pressure": data['main']['pressure'],
-            "wind_speed": data['wind']['speed'],
-            "wind_direction": data['wind'].get('deg', 0),
-            "units": units,
-            "timestamp": data['dt']
-        }
-        
-        return json.dumps(weather_data, indent=2)
-        
-    except httpx.RequestError as e:
-        return json.dumps({"error": f"Request failed: {str(e)}"}, indent=2)
-    except Exception as e:
-        return json.dumps({"error": f"Unexpected error: {str(e)}"}, indent=2)
+    return get_current_weather_http(location, units)
 
 @mcp.tool()
 def get_forecast(location: str, days: int = 5, units: str = "metric") -> str:
@@ -266,76 +220,7 @@ def get_forecast(location: str, days: int = 5, units: str = "metric") -> str:
     Returns:
         JSON string with forecast data
     """
-    try:
-        days = min(max(days, 1), 5)  # Clamp between 1 and 5
-        
-        if WEATHER_API_KEY == "demo":
-            # Return demo forecast data
-            demo_forecast = {
-                "location": location,
-                "forecast": [
-                    {
-                        "date": "2024-01-15",
-                        "temperature": 22,
-                        "conditions": "Sunny",
-                        "humidity": 60,
-                        "wind_speed": 10
-                    },
-                    {
-                        "date": "2024-01-16", 
-                        "temperature": 24,
-                        "conditions": "Partly Cloudy",
-                        "humidity": 65,
-                        "wind_speed": 12
-                    },
-                    {
-                        "date": "2024-01-17",
-                        "temperature": 20,
-                        "conditions": "Rainy",
-                        "humidity": 80,
-                        "wind_speed": 15
-                    }
-                ],
-                "units": units,
-                "note": "This is demo data. Set WEATHER_API_KEY environment variable for real data."
-            }
-            return json.dumps(demo_forecast, indent=2)
-        
-        # Use real OpenWeatherMap API
-        params = {
-            "q": location,
-            "appid": WEATHER_API_KEY,
-            "units": units
-        }
-        
-        response = httpx.get(f"{WEATHER_API_BASE}/forecast", params=params, timeout=10.0)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Process forecast data (every 3 hours for 5 days)
-        forecasts = []
-        for item in data['list'][:days * 8]:  # 8 forecasts per day (every 3 hours)
-            forecasts.append({
-                "datetime": item['dt_txt'],
-                "temperature": item['main']['temp'],
-                "conditions": item['weather'][0]['description'],
-                "humidity": item['main']['humidity'],
-                "wind_speed": item['wind']['speed'],
-                "wind_direction": item['wind'].get('deg', 0)
-            })
-        
-        forecast_data = {
-            "location": f"{data['city']['name']}, {data['city']['country']}",
-            "forecast": forecasts,
-            "units": units
-        }
-        
-        return json.dumps(forecast_data, indent=2)
-        
-    except httpx.RequestError as e:
-        return json.dumps({"error": f"Request failed: {str(e)}"}, indent=2)
-    except Exception as e:
-        return json.dumps({"error": f"Unexpected error: {str(e)}"}, indent=2)
+    return get_forecast_http(location, days, units)
 
 @mcp.tool()
 def get_weather_alerts(location: str) -> str:
@@ -347,56 +232,7 @@ def get_weather_alerts(location: str) -> str:
     Returns:
         JSON string with weather alerts
     """
-    try:
-        if WEATHER_API_KEY == "demo":
-            # Return demo alert data
-            demo_alerts = {
-                "location": location,
-                "alerts": [
-                    {
-                        "event": "Heat Advisory",
-                        "description": "High temperatures expected",
-                        "severity": "moderate",
-                        "start": "2024-01-15T12:00:00Z",
-                        "end": "2024-01-15T18:00:00Z"
-                    }
-                ],
-                "note": "This is demo data. Set WEATHER_API_KEY environment variable for real data."
-            }
-            return json.dumps(demo_alerts, indent=2)
-        
-        # Use real OpenWeatherMap API for alerts
-        params = {
-            "q": location,
-            "appid": WEATHER_API_KEY,
-            "exclude": "minutely,hourly,daily"
-        }
-        
-        response = httpx.get(f"{WEATHER_API_BASE}/onecall", params=params, timeout=10.0)
-        response.raise_for_status()
-        data = response.json()
-        
-        alerts = []
-        for alert in data.get('alerts', []):
-            alerts.append({
-                "event": alert.get('event', ''),
-                "description": alert.get('description', ''),
-                "severity": alert.get('tags', ['unknown'])[0],
-                "start": alert.get('start', 0),
-                "end": alert.get('end', 0)
-            })
-        
-        alert_data = {
-            "location": location,
-            "alerts": alerts
-        }
-        
-        return json.dumps(alert_data, indent=2)
-        
-    except httpx.RequestError as e:
-        return json.dumps({"error": f"Request failed: {str(e)}"}, indent=2)
-    except Exception as e:
-        return json.dumps({"error": f"Unexpected error: {str(e)}"}, indent=2)
+    return get_weather_alerts_http(location)
 
 if __name__ == "__main__":
     # Run in HTTP mode for testing
