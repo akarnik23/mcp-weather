@@ -1,12 +1,14 @@
 # Weather MCP Server
 
-A FastMCP server that provides weather data and forecasts for Poke integration.
+A FastAPI + FastMCP hybrid server that provides weather data, forecasts, and alerts for Poke integration.
 
 ## 🚀 Features
 
-- **get_current_weather**: Get current weather for any location
-- **get_forecast**: Get 5-day weather forecast
-- **get_weather_alerts**: Get weather alerts and warnings
+- **get_current_weather**: Current conditions (from National Weather Service forecast data)
+- **get_forecast**: Detailed multi-day forecast (day/night periods)
+- **get_weather_alerts**: Real-time alerts and warnings (NWS official alerts)
+
+Data Source: National Weather Service (`https://api.weather.gov`) — no API key required.
 
 ## 🛠️ Local Development
 
@@ -18,15 +20,9 @@ pip install -r requirements.txt
 python src/server.py
 ```
 
-## 🔑 API Key Setup (Optional)
+## 🔑 API Key Setup
 
-For real weather data, get a free API key from [OpenWeatherMap](https://openweathermap.org/api):
-
-```bash
-export WEATHER_API_KEY=your_api_key_here
-```
-
-Without an API key, the server will return demo data.
+Not required. This server uses the National Weather Service API and does not need an API key.
 
 ## 🚢 Deployment
 
@@ -44,11 +40,7 @@ Without an API key, the server will return demo data.
    - **Plan**: `Free`
    - **Build Command**: `pip install -r requirements.txt`
    - **Start Command**: `python src/server.py`
-4. **Set environment variable (optional):**
-   - Go to your Render service dashboard
-   - Click on "Environment" tab
-   - Add environment variable: `WEATHER_API_KEY` = `your_openweathermap_api_key` (optional - works without it using demo data)
-   - Click "Save Changes"
+4. No environment variables required
 5. **Deploy!**
 
 > Note: On Render's free tier, services go idle after ~15 minutes of inactivity and may require a manual "Deploy" to wake or to pick up the latest commit. Unlike Vercel, pushes do not auto-deploy by default.
@@ -60,28 +52,49 @@ Your server will be available at `https://weather-mcp.onrender.com/mcp`
 1. Go to [poke.com/settings/connections](https://poke.com/settings/connections)
 2. Add the MCP URL: `https://weather-mcp.onrender.com/mcp`
 3. Give it a name like "Weather"
-4. Try: "Can you use the Weather MCP to get current weather for San Francisco?"
+4. Try: "Use the Weather MCP to get the 3-day forecast for Boston."
+
+## 🧩 Architecture Note (FastAPI + FastMCP Hybrid)
+
+Note: FastMCP 2.x responses didn’t work well with Poke’s client in my testing due to response format differences. The client expects simpler JSON but errors on FastMCP’s structured content with "Cannot read properties of undefined (reading 'status')". This was reproducible with Interaction’s basic FastMCP template as well.
+
+So for now, this server uses a hybrid architecture where:
+- FastAPI endpoints deliver Poke‑compatible JSON
+- `@mcp.tool()` functions exist as future‑ready wrappers
+- Shared logic lives in `_http` functions to avoid duplication
+
+To try pure FastMCP later:
+1) replace the entire FastAPI main block with `mcp.run()`,
+2) optionally move each `_http` function’s logic into the corresponding `@mcp.tool()` (or keep wrappers calling `_http`), and
+3) remove FastAPI routes if no longer needed.
+
+This works with Poke today while keeping a clean migration path to pure FastMCP.
 
 ## References
 
 - Based on the Interaction MCP server template: [MCP Server Template](https://github.com/InteractionCo/mcp-server-template/tree/main)
 - Discovered via Interaction’s HackMIT challenge: [Interaction HackMIT Challenge](https://interaction.co/HackMIT)
+- National Weather Service API docs: `https://www.weather.gov/documentation/services-web-api`
 
 ## 🔧 Available Tools
 
-- `get_current_weather(location, units="metric")`: Get current weather
-- `get_forecast(location, days=5, units="metric")`: Get weather forecast
-- `get_weather_alerts(location)`: Get weather alerts
+- `get_current_weather(location, units="metric|imperial")`: Current conditions based on NWS forecast periods
+- `get_forecast(location, days=1..5, units="metric|imperial")`: Multi-day forecast (day/night periods)
+- `get_weather_alerts(location)`: Official alerts/watches/warnings for the specified location
 
 ## 📝 Example Usage
 
 ```python
-# Get current weather
-get_current_weather(location="London,UK", units="metric")
+# Get current weather (uses NWS forecast period closest to now)
+get_current_weather(location="Seattle", units="metric")
 
-# Get 3-day forecast
+# Get 3-day forecast (day/night periods)
 get_forecast(location="New York", days=3, units="imperial")
 
 # Get weather alerts
-get_weather_alerts(location="Miami,FL")
+get_weather_alerts(location="Miami")
 ```
+
+Notes:
+- Locations are resolved via a simple built-in mapping of major US cities. For other places, default coordinates are used. You can extend this with a geocoding service if needed.
+- Current conditions are derived from the first forecast period when station observations are unavailable.
