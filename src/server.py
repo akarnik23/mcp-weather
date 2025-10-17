@@ -104,9 +104,18 @@ def get_weather_station(lat: float, lon: float) -> str:
     except Exception:
         return None
 
-# Undecorated functions for HTTP endpoint
-def get_current_weather_http(location: str, units: str = "metric") -> str:
-    """Get current weather for a specific location using National Weather Service API."""
+
+@mcp.tool()
+def get_current_weather(location: str, units: str = "metric") -> str:
+    """Get current weather for a specific location using National Weather Service data.
+    
+    Args:
+        location: City name (e.g., "New York", "Los Angeles", "Chicago")
+        units: Units of measurement: metric or imperial (default: metric)
+    
+    Returns:
+        JSON string with current weather data from National Weather Service
+    """
     try:
         # Get coordinates for the location
         lat, lon = get_coordinates(location)
@@ -164,8 +173,18 @@ def get_current_weather_http(location: str, units: str = "metric") -> str:
     except Exception as e:
         return json.dumps({"error": f"Unexpected error: {str(e)}"}, indent=2)
 
-def get_forecast_http(location: str, days: int = 5, units: str = "metric") -> str:
-    """Get weather forecast for a location using National Weather Service API."""
+@mcp.tool()
+def get_forecast(location: str, days: int = 5, units: str = "metric") -> str:
+    """Get weather forecast for a location using National Weather Service data.
+    
+    Args:
+        location: City name (e.g., "New York", "Los Angeles", "Chicago")
+        days: Number of days to forecast (default: 5, max: 5)
+        units: Units of measurement: metric or imperial (default: metric)
+    
+    Returns:
+        JSON string with detailed forecast data from National Weather Service
+    """
     try:
         days = min(max(days, 1), 5)  # Clamp between 1 and 5
         
@@ -227,8 +246,16 @@ def get_forecast_http(location: str, days: int = 5, units: str = "metric") -> st
     except Exception as e:
         return json.dumps({"error": f"Unexpected error: {str(e)}"}, indent=2)
 
-def get_weather_alerts_http(location: str) -> str:
-    """Get weather alerts for a location using National Weather Service API."""
+@mcp.tool()
+def get_weather_alerts(location: str) -> str:
+    """Get weather alerts for a location using National Weather Service data.
+    
+    Args:
+        location: City name (e.g., "New York", "Los Angeles", "Chicago")
+    
+    Returns:
+        JSON string with official weather alerts from National Weather Service
+    """
     try:
         # Get coordinates for the location
         lat, lon = get_coordinates(location)
@@ -270,45 +297,6 @@ def get_weather_alerts_http(location: str) -> str:
         return json.dumps({"error": f"Request failed: {str(e)}"}, indent=2)
     except Exception as e:
         return json.dumps({"error": f"Unexpected error: {str(e)}"}, indent=2)
-
-@mcp.tool()
-def get_current_weather(location: str, units: str = "metric") -> str:
-    """Get current weather for a specific location using National Weather Service data.
-    
-    Args:
-        location: City name (e.g., "New York", "Los Angeles", "Chicago")
-        units: Units of measurement: metric or imperial (default: metric)
-    
-    Returns:
-        JSON string with current weather data from National Weather Service
-    """
-    return get_current_weather_http(location, units)
-
-@mcp.tool()
-def get_forecast(location: str, days: int = 5, units: str = "metric") -> str:
-    """Get weather forecast for a location using National Weather Service data.
-    
-    Args:
-        location: City name (e.g., "New York", "Los Angeles", "Chicago")
-        days: Number of days to forecast (default: 5, max: 5)
-        units: Units of measurement: metric or imperial (default: metric)
-    
-    Returns:
-        JSON string with detailed forecast data from National Weather Service
-    """
-    return get_forecast_http(location, days, units)
-
-@mcp.tool()
-def get_weather_alerts(location: str) -> str:
-    """Get weather alerts for a location using National Weather Service data.
-    
-    Args:
-        location: City name (e.g., "New York", "Los Angeles", "Chicago")
-    
-    Returns:
-        JSON string with official weather alerts from National Weather Service
-    """
-    return get_weather_alerts_http(location)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
